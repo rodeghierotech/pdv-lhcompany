@@ -1,0 +1,23 @@
+{
+  "name": "pdv-lh-company",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@lh-company/web",
+    "dev:api": "npm run dev --workspace=@lh-company/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "latest",
+    "eslint": "latest",
+    "typescript-eslint": "latest"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
