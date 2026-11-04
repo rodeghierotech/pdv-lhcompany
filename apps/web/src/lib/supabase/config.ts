@@ -19,13 +19,23 @@ function readTrimmedValue(
   return value === "" || value === undefined ? undefined : value;
 }
 
+function isSupportedSupabaseUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+
+    return (url.protocol === "https:" || url.protocol === "http:") && url.host !== "";
+  } catch {
+    return false;
+  }
+}
+
 export function readSupabasePublicConfig(
   environment: PublicEnvironment,
 ): SupabasePublicConfigResult {
   const url = readTrimmedValue(environment, "VITE_SUPABASE_URL");
   const anonKey = readTrimmedValue(environment, "VITE_SUPABASE_ANON_KEY");
 
-  if (url === undefined || anonKey === undefined) {
+  if (url === undefined || anonKey === undefined || !isSupportedSupabaseUrl(url)) {
     return { status: "missing_configuration" };
   }
 

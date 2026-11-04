@@ -23,4 +23,16 @@ describe("initial Supabase foundation migration", () => {
     );
     expect(migrationSql).not.toMatch(/USING\s*\(\s*true\s*\)/i);
   });
+
+  it("assigns the audit timestamp in the database instead of trusting inserts", async () => {
+    const migrationSql = await readFile(fileURLToPath(migrationUrl), "utf8");
+
+    expect(migrationSql).toMatch(
+      /CREATE FUNCTION public\.assign_audit_event_occurred_at\(\)/,
+    );
+    expect(migrationSql).toMatch(/NEW\.occurred_at := NOW\(\)/);
+    expect(migrationSql).toMatch(
+      /CREATE TRIGGER assign_audit_event_occurred_at[\s\S]*BEFORE INSERT ON public\.audit_event/,
+    );
+  });
 });

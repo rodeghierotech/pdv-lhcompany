@@ -24,6 +24,22 @@ CREATE TABLE public.audit_event (
 CREATE INDEX audit_event_organization_occurred_at_idx
   ON public.audit_event (organization_id, occurred_at DESC);
 
+CREATE FUNCTION public.assign_audit_event_occurred_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  NEW.occurred_at := NOW();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER assign_audit_event_occurred_at
+  BEFORE INSERT ON public.audit_event
+  FOR EACH ROW
+  EXECUTE FUNCTION public.assign_audit_event_occurred_at();
+
 ALTER TABLE public.organization ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.organization FORCE ROW LEVEL SECURITY;
 ALTER TABLE public.organization_member ENABLE ROW LEVEL SECURITY;

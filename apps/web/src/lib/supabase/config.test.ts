@@ -21,4 +21,13 @@ describe("readSupabasePublicConfig", () => {
       readSupabasePublicConfig({ VITE_SUPABASE_URL: " " }),
     ).toEqual({ status: "missing_configuration" });
   });
+
+  it("does not treat a malformed public URL as ready to connect", () => {
+    expect(
+      readSupabasePublicConfig({
+        VITE_SUPABASE_URL: "not-a-url",
+        VITE_SUPABASE_ANON_KEY: "anon-key",
+      }),
+    ).toEqual({ status: "missing_configuration" });
+  });
 });

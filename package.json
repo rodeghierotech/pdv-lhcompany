@@ -9,6 +9,7 @@
   "scripts": {
     "dev:web": "npm run dev --workspace=@lh-company/web",
     "dev:api": "npm run dev --workspace=@lh-company/api",
+    "test": "vitest run",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint ."
   },
