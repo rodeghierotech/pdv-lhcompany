@@ -49,6 +49,7 @@ Cada módulo separa interface/rotas, validação, serviço de domínio e reposit
 ## Dados, auditoria e desempenho
 
 - `inventory_movement` e `financial_movement` são livros imutáveis.
+- Tabelas Supabase são vinculadas a uma organização, têm RLS habilitada e só recebem políticas explícitas. `audit_event` é somente de inserção: não há política de atualização ou exclusão.
 - Tabelas de saldo/estoque atual aceleram consulta e são alteradas na mesma transação do respectivo movimento.
 - Vendas, pagamentos, itens, lotes, caixa, despesas, auditoria, mapeamentos externos, outbox e conflitos são entidades independentes; nenhum histórico é apagado.
 - Operações mutantes usam UUID idempotente. Uma transação no backend aplica a regra, cria movimento, atualiza saldo materializado e grava o evento de saída.
