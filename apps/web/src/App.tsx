@@ -1,6 +1,11 @@
 import { AdminShell } from "./components/shared/AdminShell";
+import { SyncStatusCard } from "./features/sincronizacao/SyncStatusCard";
+import { deriveSyncStatus } from "./features/sincronizacao/sync-status";
+import { readSupabasePublicConfig } from "./lib/supabase/config";
 
 export function App() {
+  const syncStatus = deriveSyncStatus(readSupabasePublicConfig(import.meta.env));
+
   return (
     <AdminShell
       title="PDV LH Company"
@@ -14,6 +19,7 @@ export function App() {
           Produtos, vendas, caixa e sincronização serão adicionados em etapas.
         </p>
       </section>
+      <SyncStatusCard status={syncStatus} />
     </AdminShell>
   );
 }
