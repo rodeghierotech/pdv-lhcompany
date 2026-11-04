@@ -21,15 +21,15 @@ Worker no Render ─────────────── Nuvemshop API e w
 
 ## Stack e implantação
 
-- Frontend: React, TypeScript, Tailwind CSS, shadcn/ui e Lucide Icons, publicado como Render Static Site.
-- Backend: Node.js/TypeScript, Fastify e Zod, publicado como Render Web Service pago.
-- Dados: Neon PostgreSQL com conexão pooled e transações para regras críticas.
-- Acesso ao banco: driver `pg`, escolhido para manter SQL e transações explícitos nesta primeira versão, sem adicionar ORM antes de haver necessidade comprovada.
-- Migrações: arquivos SQL numerados em `apps/api/migrations`, registrados em `schema_migration` e executados por `npm run db:migrate --workspace=@lh-company/api` somente em ambiente com `DATABASE_URL` configurada.
-- Integração: worker pago e sempre ativo no Render, com outbox persistente, retentativas e painel de falhas.
-- Segredos: apenas variáveis protegidas do Render. Nenhuma credencial de banco ou Nuvemshop entra no bundle PWA.
-- Organização: npm workspaces com `apps/web`, `apps/api` e `packages/contracts`.
-- Build do frontend: Vite. A escolha mantém o shell React estático compatível com Render, integra Tailwind e reduz configuração própria nesta base inicial.
+- Frontend: React, TypeScript, Tailwind CSS, shadcn/ui e Lucide Icons, publicado pela Vercel como PWA estática.
+- Backend: Supabase Auth, PostgreSQL, RLS, SQL migrations e, para operações críticas futuras, RPC ou Edge Functions. O projeto não mantém um servidor Fastify em produção.
+- Dados: PostgreSQL gerenciado pelo Supabase; regras críticas continuam usando transações SQL explícitas.
+- Migrações: arquivos SQL versionados em `supabase/migrations`, aplicados pelo Supabase CLI ou painel do projeto configurado. Nenhuma URL de banco é incluída no frontend.
+- Integração: sincronização e Nuvemshop serão adicionadas em uma etapa posterior, através de execução gerenciada do Supabase e outbox persistente.
+- Segredos: a Vercel recebe somente `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`; service-role, URLs de banco e tokens Nuvemshop permanecem em variáveis protegidas do Supabase.
+- Organização: npm workspaces com `apps/web`, `apps/api` (legado, fora da implantação) e `packages/contracts`.
+- Build do frontend: Vite. A escolha mantém um shell React estático compatível com Vercel e reduz configuração própria nesta base inicial.
+- Testes: Vitest é adotado para testar regras TypeScript puras no frontend sem depender de navegador ou de uma instância remota do Supabase.
 
 Planos gratuitos não são aceitáveis para API ou worker de produção devido à hibernação. Qualquer nova biblioteca, ORM ou serviço precisa de justificativa e registro nesta página antes de ser adotado.
 
