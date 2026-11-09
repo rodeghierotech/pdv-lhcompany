@@ -48,7 +48,7 @@ Criar um PDV básico de moda para atendimento rápido, com continuidade offline,
 - Pendências não sincronizadas não são consideradas backup, nem ficam visíveis como confirmadas em outro dispositivo.
 - O histórico de estoque e financeiro é auditável; saldos atuais são derivados e atualizados transacionalmente.
 - Sessão offline é limitada, assinada pelo backend e permite somente operações explicitamente autorizadas.
-- API e worker em produção são pagos e sempre ativos; banco fica no Neon.
+- Backend confirmado fica no Supabase: Auth, PostgreSQL, RPC e Edge Functions; Vercel hospeda somente o frontend.
 
 ## Critérios de aceite
 

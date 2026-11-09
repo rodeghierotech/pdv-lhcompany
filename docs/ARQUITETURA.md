@@ -11,12 +11,11 @@ PWA React/TypeScript
   └─ Service Worker
           │ quando houver rede
           ▼
-API Node/TypeScript no Render ── Neon PostgreSQL
-          │                         ├─ livro de movimentos
-          │                         ├─ saldos materializados
-          │                         └─ outbox/auditoria/conflitos
+Supabase Auth + PostgreSQL ────── livro de movimentos
+          │                       ├─ saldos materializados
+          │                       └─ outbox/auditoria/conflitos
           ▼
-Worker no Render ─────────────── Nuvemshop API e webhooks
+Supabase Edge Functions ───────── Nuvemshop API e webhooks
 ```
 
 ## Stack e implantação
@@ -25,13 +24,13 @@ Worker no Render ─────────────── Nuvemshop API e w
 - Backend: Supabase Auth, PostgreSQL, RLS, SQL migrations e, para operações críticas futuras, RPC ou Edge Functions. O projeto não mantém um servidor Fastify em produção.
 - Dados: PostgreSQL gerenciado pelo Supabase; regras críticas continuam usando transações SQL explícitas.
 - Migrações: arquivos SQL versionados em `supabase/migrations`, aplicados pelo Supabase CLI ou painel do projeto configurado. Nenhuma URL de banco é incluída no frontend.
-- Integração: sincronização e Nuvemshop serão adicionadas em uma etapa posterior, através de execução gerenciada do Supabase e outbox persistente.
+- Integração: importação inicial do catálogo Nuvemshop e o cadastro manual complementam-se; a execução que usa o token da Nuvemshop fica em Edge Function do Supabase, com outbox persistente nas próximas etapas.
 - Segredos: a Vercel recebe somente `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`; service-role, URLs de banco e tokens Nuvemshop permanecem em variáveis protegidas do Supabase.
 - Organização: npm workspaces com `apps/web`, `apps/api` (legado, fora da implantação) e `packages/contracts`.
 - Build do frontend: Vite. A escolha mantém um shell React estático compatível com Vercel e reduz configuração própria nesta base inicial.
 - Testes: Vitest é adotado para testar regras TypeScript puras no frontend sem depender de navegador ou de uma instância remota do Supabase.
 
-Planos gratuitos não são aceitáveis para API ou worker de produção devido à hibernação. Qualquer nova biblioteca, ORM ou serviço precisa de justificativa e registro nesta página antes de ser adotado.
+O plano escolhido para esta etapa é Vercel + Supabase. Qualquer nova biblioteca, ORM ou serviço precisa de justificativa e registro nesta página antes de ser adotado.
 
 ## Organização por domínio
 
