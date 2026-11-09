@@ -1,4 +1,5 @@
 import { readSupabasePublicConfig } from "../supabase/config";
+import type { CatalogVariantRecord } from "../../features/produtos/catalog-read-model";
 
 export type CreateManualCatalogProductInput = {
   name: string;
@@ -40,4 +41,26 @@ export async function startNuvemshopImport(input: { accessToken: string; organiz
   });
   if (!response.ok) throw new Error("Não foi possível confirmar a importação no servidor.");
   return response.json() as Promise<{ importId: string; imported: number; linked: number; needsReview: number }>;
+}
+
+export type CatalogWorkspace = {
+  variants: CatalogVariantRecord[];
+  pendingReviews: Array<{ id: string; sku: string; reason: string; created_at: string }>;
+};
+
+export async function fetchCatalogWorkspace(accessToken: string): Promise<CatalogWorkspace> {
+  const config = readSupabasePublicConfig(import.meta.env);
+  if (config.status !== "ready") throw new Error("Configure o Supabase antes de consultar o catálogo.");
+
+  const headers = { apikey: config.anonKey, Authorization: `Bearer ${accessToken}` };
+  const [variantsResponse, reviewsResponse] = await Promise.all([
+    fetch(`${config.url}/rest/v1/product_variant?select=id,sku,sale_price_in_cents,requires_cost_review,product(name),inventory_balance(quantity)&order=created_at.desc`, { headers }),
+    fetch(`${config.url}/rest/v1/catalog_pending_review?select=id,sku,reason,created_at&order=created_at.desc`, { headers }),
+  ]);
+  if (!variantsResponse.ok || !reviewsResponse.ok) throw new Error("Não foi possível atualizar o catálogo confirmado.");
+
+  return {
+    variants: await variantsResponse.json() as CatalogVariantRecord[],
+    pendingReviews: await reviewsResponse.json() as CatalogWorkspace["pendingReviews"],
+  };
 }
