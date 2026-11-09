@@ -1,0 +1,27 @@
+import { useState } from "react";
+import { Download, Plus, RefreshCw } from "lucide-react";
+import { catalogFeedback, type CatalogImportStatus } from "./catalog-view-model";
+import { createManualCatalogProduct } from "../../lib/catalog/catalog-api";
+
+export function CatalogPage() {
+  const [status, setStatus] = useState<CatalogImportStatus>("pending");
+  const [productName, setProductName] = useState("");
+  const [sku, setSku] = useState("");
+  const [formError, setFormError] = useState<string>();
+  const feedback = catalogFeedback(status);
+
+  return <section className="space-y-4" aria-labelledby="catalog-title">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div><h1 id="catalog-title" className="text-lg font-semibold">Produtos e estoque</h1><p className="text-sm text-muted-foreground">Importe o catálogo inicial ou complemente itens manualmente.</p></div>
+      <div className="flex gap-2"><button className="border-border bg-surface inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium" onClick={() => setStatus("pending")}><Download className="size-4" />Importar Nuvemshop</button><button className="bg-foreground text-background inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium" onClick={() => document.getElementById("manual-product")?.scrollIntoView()}><Plus className="size-4" />Novo produto</button></div>
+    </div>
+    <div className="border-border bg-surface rounded-lg border p-4" role="status"><div className="flex items-center gap-2"><RefreshCw className="text-muted-foreground size-4" /><strong className="text-sm">{feedback.title}</strong></div><p className="text-muted-foreground mt-1 text-sm">{feedback.confirmed ? "Dados confirmados pelo servidor." : "Nenhum dado pendente é tratado como confirmado."}</p></div>
+    <form id="manual-product" className="border-border bg-surface grid gap-3 rounded-lg border p-4 sm:grid-cols-2" onSubmit={async (event) => { event.preventDefault(); setFormError(undefined); setStatus("pending"); try { await createManualCatalogProduct({ name: productName, sku }); setStatus("completed"); setProductName(""); setSku(""); } catch (error) { setStatus("recoverable_failure"); setFormError(error instanceof Error ? error.message : "Erro ao salvar produto."); } }}>
+      <h2 className="sm:col-span-2 text-base font-semibold">Cadastro manual complementar</h2>
+      <label className="grid gap-1 text-sm">Nome do produto<input required value={productName} onChange={(event) => setProductName(event.target.value)} className="border-border rounded-md border px-3 py-2" /></label>
+      <label className="grid gap-1 text-sm">SKU da variante<input required value={sku} onChange={(event) => setSku(event.target.value)} className="border-border rounded-md border px-3 py-2" /></label>
+      <button className="bg-foreground text-background w-fit rounded-md px-3 py-2 text-sm font-medium sm:col-span-2" type="submit">Salvar como pendente de confirmação</button>
+      {formError ? <p className="text-sm text-muted-foreground sm:col-span-2" role="alert">{formError}</p> : null}
+    </form>
+  </section>;
+}
