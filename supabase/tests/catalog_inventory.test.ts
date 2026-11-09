@@ -8,6 +8,11 @@ const migrationUrl = new URL(
   import.meta.url,
 );
 
+const importCommandMigrationUrl = new URL(
+  "../migrations/20261106110000_catalog_import_command.sql",
+  import.meta.url,
+);
+
 describe("catalog and inventory migration", () => {
   it("keeps catalog and stock data organization-scoped and protected by RLS", async () => {
     const migration = await readFile(fileURLToPath(migrationUrl), "utf8");
@@ -21,5 +26,18 @@ describe("catalog and inventory migration", () => {
     expect(migration).toMatch(/pg_advisory_xact_lock/);
     expect(migration).toMatch(/ON CONFLICT \(variant_id\) DO UPDATE/);
     expect(migration).toMatch(/GRANT EXECUTE ON FUNCTION public\.record_inventory_replenishment/);
+  });
+});
+
+describe("Nuvemshop import command migration", () => {
+  it("keeps import application idempotent and server-only", async () => {
+    const migration = await readFile(fileURLToPath(importCommandMigrationUrl), "utf8");
+
+    expect(migration).toMatch(/CREATE TABLE public\.catalog_import_operation/);
+    expect(migration).toMatch(/pg_advisory_xact_lock/);
+    expect(migration).toMatch(/INSERT INTO public\.inventory_movement/);
+    expect(migration).toMatch(/INSERT INTO public\.catalog_pending_review/);
+    expect(migration).toMatch(/REVOKE ALL ON FUNCTION public\.apply_nuvemshop_catalog_candidate/);
+    expect(migration).toMatch(/GRANT EXECUTE ON FUNCTION public\.apply_nuvemshop_catalog_candidate[\s\S]*TO service_role/);
   });
 });
