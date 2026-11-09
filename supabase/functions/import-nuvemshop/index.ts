@@ -4,7 +4,7 @@ import { z } from "npm:zod@3.24.1";
 import { toCatalogCandidates } from "../_shared/catalog-command.ts";
 import { fetchNuvemshopProducts } from "../_shared/nuvemshop-client.ts";
 
-const RequestSchema = z.object({ organizationId: z.string().uuid() });
+const RequestSchema = z.object({ organizationId: z.string().uuid(), operationId: z.string().uuid() });
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
@@ -21,6 +21,28 @@ if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey || !nuvemshopStoreId || 
 const adminClient = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+function bytesToUuid(bytes: Uint8Array): string {
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes.slice(0, 16), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+async function operationIdForCandidate(importOperationId: string, externalVariantId: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${importOperationId}:${externalVariantId}`));
+  return bytesToUuid(new Uint8Array(digest));
+}
+
+async function importTotals(importId: string) {
+  const { data, error } = await adminClient.from("catalog_import_operation").select("outcome").eq("import_id", importId);
+  if (error) throw new Error("Não foi possível consultar o resultado da importação.");
+  return (data ?? []).reduce((totals, item) => ({
+    imported: totals.imported + Number(item.outcome === "imported"),
+    linked: totals.linked + Number(item.outcome === "linked"),
+    needsReview: totals.needsReview + Number(item.outcome === "needs_review"),
+  }), { imported: 0, linked: 0, needsReview: 0 });
+}
 
 Deno.serve(async (request) => {
   let activeImportId: string | undefined;
@@ -45,14 +67,27 @@ Deno.serve(async (request) => {
       .maybeSingle();
     if (membershipError || !membership) return new Response("Sem acesso à organização", { status: 403 });
 
-    const operationId = crypto.randomUUID();
-    const { data: catalogImport, error: importError } = await adminClient
+    const { data: existingImport, error: existingImportError } = await adminClient
       .from("catalog_import")
-      .insert({ organization_id: input.organizationId, operation_id: operationId, source: "nuvemshop", status: "pending" })
-      .select("id")
-      .single();
-    if (importError) throw new Error("Não foi possível iniciar a importação.");
+      .select("id, status")
+      .eq("organization_id", input.organizationId)
+      .eq("operation_id", input.operationId)
+      .maybeSingle();
+    if (existingImportError) throw new Error("Não foi possível consultar a importação.");
+
+    const { data: catalogImport, error: importError } = existingImport
+      ? { data: existingImport, error: null }
+      : await adminClient
+        .from("catalog_import")
+        .insert({ organization_id: input.organizationId, operation_id: input.operationId, source: "nuvemshop", status: "pending" })
+        .select("id, status")
+        .single();
+    if (importError || !catalogImport) throw new Error("Não foi possível iniciar a importação.");
     activeImportId = catalogImport.id;
+
+    if (catalogImport.status === "completed" || catalogImport.status === "needs_review") {
+      return Response.json({ importId: catalogImport.id, ...(await importTotals(catalogImport.id)) });
+    }
 
     const products = await fetchNuvemshopProducts({
       storeId: nuvemshopStoreId,
@@ -60,20 +95,17 @@ Deno.serve(async (request) => {
       userAgent: nuvemshopUserAgent,
     });
     const candidates = toCatalogCandidates({ products, defaultLocationId });
-    const totals = { imported: 0, linked: 0, needsReview: 0 };
-
     for (const candidate of candidates) {
       const { data, error } = await adminClient.rpc("apply_nuvemshop_catalog_candidate", {
         import_id: catalogImport.id,
         candidate,
-        operation_id: crypto.randomUUID(),
+        operation_id: await operationIdForCandidate(input.operationId, candidate.externalVariantId),
         actor_id: userData.user.id,
       });
       if (error) throw new Error("Não foi possível aplicar um item da importação.");
-      if (data.outcome === "imported") totals.imported += 1;
-      if (data.outcome === "linked") totals.linked += 1;
-      if (data.outcome === "needs_review") totals.needsReview += 1;
     }
+
+    const totals = await importTotals(catalogImport.id);
 
     await adminClient.from("catalog_import").update({
       status: totals.needsReview > 0 ? "needs_review" : "completed",
