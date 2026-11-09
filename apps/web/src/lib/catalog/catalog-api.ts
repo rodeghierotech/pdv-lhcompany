@@ -7,6 +7,7 @@ export type CreateManualCatalogProductInput = {
   costInCents: number;
   initialQuantity: number;
   operationId: string;
+  accessToken: string;
 };
 
 export async function createManualCatalogProduct(input: CreateManualCatalogProductInput) {
@@ -15,7 +16,7 @@ export async function createManualCatalogProduct(input: CreateManualCatalogProdu
 
   const response = await fetch(`${config.url}/rest/v1/rpc/create_catalog_product`, {
     method: "POST",
-    headers: { apikey: config.anonKey, Authorization: `Bearer ${config.anonKey}`, "Content-Type": "application/json" },
+    headers: { apikey: config.anonKey, Authorization: `Bearer ${input.accessToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       product_name: input.name,
       variant_sku: input.sku,
@@ -26,4 +27,17 @@ export async function createManualCatalogProduct(input: CreateManualCatalogProdu
     }),
   });
   if (!response.ok) throw new Error("Não foi possível confirmar o produto no servidor.");
+}
+
+export async function startNuvemshopImport(input: { accessToken: string; organizationId: string }) {
+  const config = readSupabasePublicConfig(import.meta.env);
+  if (config.status !== "ready") throw new Error("Configure o Supabase antes de importar o catálogo.");
+
+  const response = await fetch(`${config.url}/functions/v1/import-nuvemshop`, {
+    method: "POST",
+    headers: { apikey: config.anonKey, Authorization: `Bearer ${input.accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ organizationId: input.organizationId }),
+  });
+  if (!response.ok) throw new Error("Não foi possível confirmar a importação no servidor.");
+  return response.json() as Promise<{ importId: string; imported: number; linked: number; needsReview: number }>;
 }
