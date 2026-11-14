@@ -6,3 +6,5 @@ coverage/
 !.env.example
 .vite/
 *.tsbuildinfo
+.superpowers/
+.worktrees/
