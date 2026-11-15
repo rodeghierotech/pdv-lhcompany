@@ -1,4 +1,10 @@
-import { ProductSchema, type Product } from "@lh-company/contracts";
+import {
+  ProductCatalogItemSchema,
+  ProductSchema,
+  type Product,
+  type ProductCatalogItem,
+  type ProductCatalogQuery,
+} from "@lh-company/contracts";
 import type { PoolClient } from "pg";
 
 import { ProductNotFoundError } from "./product-errors.js";
@@ -24,6 +30,12 @@ interface VariantRow {
   active: boolean;
 }
 
+interface CatalogRow extends VariantRow {
+  product_name: string;
+  product_active: boolean;
+  quantity: number;
+}
+
 export interface ProductOperation {
   product: Product;
   fingerprint: string | null;
@@ -36,6 +48,7 @@ export interface ProductInsertion {
 }
 
 export interface ProductRepository {
+  list(client: PoolClient, query: ProductCatalogQuery): Promise<ProductCatalogItem[]>;
   findById(client: PoolClient, productId: string): Promise<Product | undefined>;
   findByOperationId(client: PoolClient, operationId: string): Promise<ProductOperation | undefined>;
   insert(client: PoolClient, insertion: ProductInsertion): Promise<Product>;
@@ -73,6 +86,43 @@ export function createProductRepository(): ProductRepository {
   }
 
   return {
+    async list(client, query) {
+      // The explicit escape character makes user %, _ and ! literal text.
+      const searchPattern = `%${query.search.replace(/[!%_]/g, "!$&")}%`;
+      const result = await client.query<CatalogRow>(`
+        SELECT variant.id, variant.product_id, product.name AS product_name,
+               product.active AS product_active, variant.sku, variant.barcode,
+               variant.attributes, variant.sale_price_in_cents, variant.cost_in_cents,
+               variant.tracks_inventory, variant.minimum_stock_quantity, variant.active,
+               COALESCE(balance.quantity, 0) AS quantity
+        FROM product_variant AS variant
+        JOIN product ON product.id = variant.product_id
+        LEFT JOIN inventory_balance AS balance ON balance.variant_id = variant.id
+        WHERE ($1 = '' OR product.name ILIKE $2 ESCAPE '!'
+               OR variant.sku ILIKE $2 ESCAPE '!' OR variant.barcode ILIKE $2 ESCAPE '!')
+          AND ($3 = 'all' OR ($3 = 'active' AND product.active AND variant.active)
+               OR ($3 = 'inactive' AND (NOT product.active OR NOT variant.active)))
+          AND (NOT $4::BOOLEAN OR (variant.tracks_inventory
+               AND COALESCE(balance.quantity, 0) <= variant.minimum_stock_quantity))
+        ORDER BY product.name, variant.sku, variant.id
+        LIMIT $5
+      `, [query.search, searchPattern, query.status, query.lowStockOnly, query.limit]);
+      return result.rows.map((row) => ProductCatalogItemSchema.parse({
+        productId: row.product_id,
+        productName: row.product_name,
+        productActive: row.product_active,
+        variantId: row.id,
+        sku: row.sku,
+        barcode: row.barcode,
+        attributes: row.attributes,
+        salePriceInCents: row.sale_price_in_cents,
+        costInCents: row.cost_in_cents,
+        quantity: row.quantity,
+        minimumStockQuantity: row.minimum_stock_quantity,
+        tracksInventory: row.tracks_inventory,
+        variantActive: row.active,
+      }));
+    },
     findById,
     async findByOperationId(client, operationId) {
       const result = await client.query<{ id: string; operation_fingerprint: string | null }>(

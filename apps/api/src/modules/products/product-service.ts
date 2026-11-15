@@ -2,8 +2,11 @@ import { createHash, randomUUID } from "node:crypto";
 
 import {
   CreateProductCommandSchema,
+  ProductCatalogQuerySchema,
   type CreateProductCommand,
   type Product,
+  type ProductCatalogItem,
+  type ProductCatalogQuery,
 } from "@lh-company/contracts";
 import type { Pool } from "pg";
 
@@ -13,6 +16,7 @@ import type { ProductOperation, ProductRepository } from "./product-repository.j
 
 export interface ProductService {
   create(command: CreateProductCommand): Promise<Product>;
+  list(query: ProductCatalogQuery): Promise<ProductCatalogItem[]>;
 }
 
 interface ProductServiceDependencies {
@@ -42,6 +46,15 @@ export function createProductService({
   idFactory = randomUUID,
 }: ProductServiceDependencies): ProductService {
   return {
+    async list(input) {
+      const query = ProductCatalogQuerySchema.parse(input);
+      const client = await database.connect();
+      try {
+        return await repository.list(client, query);
+      } finally {
+        client.release();
+      }
+    },
     async create(input) {
       const command = CreateProductCommandSchema.parse(input);
       // Zod gives every object a fixed field order and normalizes defaults and text.
