@@ -17,6 +17,7 @@ export const ProductVariantSchema = z.object({
   salePriceInCents: MoneyInCentsSchema,
   costInCents: MoneyInCentsSchema,
   tracksInventory: z.boolean(),
+  minimumStockQuantity: z.number().int().nonnegative().default(3),
   active: z.boolean(),
 });
 
@@ -40,6 +41,43 @@ export const CreateProductInputSchema = ProductSchema.omit({ id: true }).extend(
 });
 
 export type CreateProductInput = z.infer<typeof CreateProductInputSchema>;
+
+export const CreateProductCommandSchema = z.object({
+  operationId: UuidSchema,
+  product: CreateProductInputSchema,
+});
+
+export type CreateProductCommand = z.infer<typeof CreateProductCommandSchema>;
+
+export const ProductCatalogQuerySchema = z.object({
+  search: z.string().trim().default(""),
+  lowStockOnly: z.union([
+    z.boolean(),
+    z.enum(["true", "false"]).transform((value) => value === "true"),
+  ]).default(false),
+  status: z.enum(["active", "inactive", "all"]).default("active"),
+  limit: z.coerce.number().int().positive().transform((value) => Math.min(value, 100)).default(50),
+});
+
+export type ProductCatalogQuery = z.infer<typeof ProductCatalogQuerySchema>;
+
+export const ProductCatalogItemSchema = z.object({
+  productId: UuidSchema,
+  productName: ProductSchema.shape.name,
+  productActive: z.boolean(),
+  variantId: UuidSchema,
+  sku: ProductVariantSchema.shape.sku,
+  barcode: ProductVariantSchema.shape.barcode,
+  attributes: ProductVariantSchema.shape.attributes,
+  salePriceInCents: MoneyInCentsSchema,
+  costInCents: MoneyInCentsSchema,
+  quantity: z.number().int(),
+  minimumStockQuantity: ProductVariantSchema.shape.minimumStockQuantity,
+  tracksInventory: z.boolean(),
+  variantActive: z.boolean(),
+});
+
+export type ProductCatalogItem = z.infer<typeof ProductCatalogItemSchema>;
 
 export const InventoryMovementReasonSchema = z.enum([
   "replenishment",
