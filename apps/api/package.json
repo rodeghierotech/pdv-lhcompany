@@ -8,6 +8,8 @@
     "start": "node dist/server.js",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
+    "test": "tsx src/test/run-tests.ts unit",
+    "test:db": "tsx src/test/run-tests.ts db",
     "db:migrate": "tsx src/infrastructure/run-migrations.ts"
   },
   "dependencies": {

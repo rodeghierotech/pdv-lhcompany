@@ -2,6 +2,10 @@ import { Pool, type PoolClient } from "pg";
 
 let pool: Pool | undefined;
 
+export function createDatabasePool(connectionString: string): Pool {
+  return new Pool({ connectionString, max: 10 });
+}
+
 export function getDatabasePool(): Pool {
   if (pool) {
     return pool;
@@ -13,14 +17,15 @@ export function getDatabasePool(): Pool {
     throw new Error("DATABASE_URL deve ser configurada para acessar o banco.");
   }
 
-  pool = new Pool({ connectionString, max: 10 });
+  pool = createDatabasePool(connectionString);
   return pool;
 }
 
 export async function withinTransaction<T>(
   operation: (client: PoolClient) => Promise<T>,
+  database: Pool = getDatabasePool(),
 ): Promise<T> {
-  const client = await getDatabasePool().connect();
+  const client = await database.connect();
 
   try {
     await client.query("BEGIN");
