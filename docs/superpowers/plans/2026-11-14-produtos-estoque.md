@@ -61,7 +61,7 @@
 - `apps/web/src/App.tsx`: composição e navegação interna desta fatia.
 - `apps/web/src/styles/index.css` e `docs/DESIGN_SYSTEM.md`: tokens e regras visuais aprovadas.
 
-## Tarefa 1: Contratos compartilhados
+## Task 1: Contratos compartilhados
 
 **Arquivos:**
 
@@ -137,7 +137,7 @@ git add packages/contracts
 git commit -m "feat: define product and inventory contracts"
 ```
 
-## Tarefa 2: Migração e infraestrutura transacional testável
+## Task 2: Migração e infraestrutura transacional testável
 
 **Arquivos:**
 
@@ -201,7 +201,7 @@ git add apps/api/migrations apps/api/src/infrastructure apps/api/src/test apps/a
 git commit -m "feat: add product inventory migration infrastructure"
 ```
 
-## Tarefa 3: Criação atômica e idempotente de produtos
+## Task 3: Criação atômica e idempotente de produtos
 
 **Arquivos:**
 
@@ -257,7 +257,7 @@ git add apps/api/src/modules/products
 git commit -m "feat: create products atomically"
 ```
 
-## Tarefa 4: Catálogo e rotas HTTP de produtos
+## Task 4: Catálogo e rotas HTTP de produtos
 
 **Arquivos:**
 
@@ -320,7 +320,7 @@ git add apps/api/src/app.ts apps/api/src/modules/products
 git commit -m "feat: expose product catalog api"
 ```
 
-## Tarefa 5: Reposição, custo médio e histórico auditável
+## Task 5: Reposição, custo médio e histórico auditável
 
 **Arquivos:**
 
@@ -391,7 +391,7 @@ git add apps/api/src/modules/inventory apps/api/src/app.ts apps/api/migrations
 git commit -m "feat: add auditable inventory replenishment"
 ```
 
-## Tarefa 6: Fundação visual e testes do frontend
+## Task 6: Fundação visual e testes do frontend
 
 **Arquivos:**
 
@@ -458,7 +458,7 @@ git add docs/ARQUITETURA.md docs/DESIGN_SYSTEM.md apps/web package-lock.json
 git commit -m "feat: establish lh company interface system"
 ```
 
-## Tarefa 7: Cliente HTTP e catálogo responsivo
+## Task 7: Cliente HTTP e catálogo responsivo
 
 **Arquivos:**
 
@@ -509,7 +509,7 @@ git add apps/web/src apps/web/vite.config.ts
 git commit -m "feat: add responsive product catalog"
 ```
 
-## Tarefa 8: Cadastro de produto com variantes
+## Task 8: Cadastro de produto com variantes
 
 **Arquivos:**
 
@@ -563,7 +563,7 @@ git add apps/web/src
 git commit -m "feat: add product variant registration"
 ```
 
-## Tarefa 9: Reposição e histórico na interface
+## Task 9: Reposição e histórico na interface
 
 **Arquivos:**
 
@@ -613,7 +613,7 @@ git add apps/web/src
 git commit -m "feat: add inventory replenishment workflow"
 ```
 
-## Tarefa 10: Integração, acessibilidade e verificação final
+## Task 10: Integração, acessibilidade e verificação final
 
 **Arquivos:**
 
