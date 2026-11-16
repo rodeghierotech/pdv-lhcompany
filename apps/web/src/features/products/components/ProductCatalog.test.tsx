@@ -96,7 +96,7 @@ describe("product catalog", () => {
     expect(within(table).getByRole("button", { name: /Camisa de linho.*Tamanho: M/ })).toHaveTextContent("Cor: Azul");
     expect(within(table).getAllByText(/129,90/)).toHaveLength(2);
     expect(screen.getByText(/1 produto.*2 variantes.*nesta consulta/i)).toBeInTheDocument();
-    expect(screen.getByLabelText("Conferência desta consulta")).toHaveTextContent(/custo em estoque:.*600,00/i);
+    expect(screen.getByLabelText("Conferência desta consulta")).toHaveTextContent(/custo estimado em estoque:.*600,00/i);
     expect(screen.getByText(/dados consultados no servidor/i)).toBeInTheDocument();
     fireEvent.click(within(table).getByRole("button", { name: /Camisa de linho.*Tamanho: M/ }));
     expect(onSelectVariant).toHaveBeenCalledExactlyOnceWith(variant.variantId);

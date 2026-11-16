@@ -22,7 +22,7 @@ export function ProductCatalog({ items, onSelectVariant }: ProductCatalogProps) 
       <div className="space-y-2 border-y border-border py-3 text-sm">
         <p className="font-medium">{productCount} {productCount === 1 ? "produto" : "produtos"} · {items.length} {items.length === 1 ? "variante" : "variantes"} nesta consulta</p>
         <div aria-label="Conferência desta consulta" className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground">
-          <p>Custo em estoque: <span className="tabular-nums text-foreground">{money(inventoryCost)}</span></p>
+          <p>Custo estimado em estoque: <span className="tabular-nums text-foreground">{money(inventoryCost)}</span></p>
           <p>Variantes com estoque baixo: <span className="tabular-nums text-foreground">{lowStockCount}</span></p>
         </div>
         <p className="text-xs text-muted-foreground">Dados consultados no servidor. Saldos não incluem operações locais pendentes.</p>
