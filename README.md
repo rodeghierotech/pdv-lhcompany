@@ -12,6 +12,7 @@ Requisitos: Node.js 22 ou superior, npm e PostgreSQL de desenvolvimento. Execute
 
 ```powershell
 npm.cmd ci
+npm.cmd run build:contracts
 ```
 
 Configure as variáveis no ambiente do processo que executará cada comando; a API, as migrações e os testes PostgreSQL não carregam arquivos `.env` automaticamente. A tabela lista apenas os nomes, sem valores ou credenciais:
@@ -38,7 +39,7 @@ npm.cmd run dev:api
 O servidor da API fica restrito à interface de loopback enquanto esta fatia não possui autenticação. Em outro terminal, inicie o web apenas em loopback:
 
 ```powershell
-npm.cmd run dev --workspace=@lh-company/web -- --host 127.0.0.1
+npm.cmd run dev:web -- --host 127.0.0.1
 ```
 
 Abra o endereço local informado pelo Vite. O proxy de desenvolvimento encaminha `/api` para a porta padrão da API e remove esse prefixo. API e web devem permanecer na mesma máquina. Não é necessário configurar CORS nem uma URL de serviço externo.
@@ -52,7 +53,15 @@ npm.cmd run test
 npm.cmd run build
 ```
 
-Os comandos agregam os workspaces aplicáveis. `test` executa apenas contratos, regras puras da API e componentes web; não acessa PostgreSQL. `build` compila API e web, sem publicar artefatos nem aplicar migrações.
+Os comandos raiz compilam os contratos antes dos consumidores. `test` executa apenas contratos, regras puras da API e componentes web; não acessa PostgreSQL. `build` compila contratos, API e web nessa ordem, sem publicar artefatos nem aplicar migrações. Os contratos exportam somente JavaScript ESM e declarações compiladas. Se alterar contratos com os servidores já abertos, reinicie o comando raiz ou execute `npm.cmd run build:contracts`.
+
+Para conferir o artefato compilado sem loader TypeScript:
+
+```powershell
+npm.cmd run test:built
+```
+
+Esse comando faz o build e inicia temporariamente a API compilada em uma porta de loopback, confere `/health` e encerra o processo, sem acessar o banco. Após `build`, `npm.cmd run start --workspace=@lh-company/api` também inicia o artefato compilado, mantendo a restrição de uso local até autenticação.
 
 Para a suíte PostgreSQL, configure **somente `TEST_DATABASE_URL`** para um banco local descartável e execute:
 

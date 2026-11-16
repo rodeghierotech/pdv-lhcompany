@@ -29,6 +29,7 @@ Worker no Render ─────────────── Nuvemshop API e w
 - Integração: worker pago e sempre ativo no Render, com outbox persistente, retentativas e painel de falhas.
 - Segredos: apenas variáveis protegidas do Render. Nenhuma credencial de banco ou Nuvemshop entra no bundle PWA.
 - Organização: npm workspaces com `apps/web`, `apps/api` e `packages/contracts`.
+- Os contratos exportam JavaScript ESM e declarações de `packages/contracts/dist`; o runtime compilado não carrega TypeScript fonte. Os scripts raiz compilam contratos antes dos consumidores; `build` segue contratos → API → web. Após alterar contratos durante desenvolvimento, reinicie o comando raiz ou execute `npm run build:contracts`. `npm run test:built` compila e inicia a API emitida com Node sem loader TypeScript, conferindo `/health` em loopback.
 - Build do frontend: Vite. A escolha mantém o shell React estático compatível com Render, integra Tailwind e reduz configuração própria nesta base inicial.
 
 Planos gratuitos não são aceitáveis para API ou worker de produção devido à hibernação. Qualquer nova biblioteca, ORM ou serviço precisa de justificativa e registro nesta página antes de ser adotado.
@@ -54,6 +55,7 @@ Cada módulo separa interface/rotas, validação, serviço de domínio e reposit
 - Operações mutantes usam UUID idempotente. Uma transação no backend aplica a regra, cria movimento, atualiza saldo materializado e grava o evento de saída.
 - Valores monetários são representados em centavos inteiros nos contratos e na persistência; nenhum cálculo financeiro usa ponto flutuante.
 - A atualização de `inventory_balance` e a inserção de `inventory_movement` ocorrem na mesma transação PostgreSQL. A tabela de saldo acelera consulta; o movimento é a evidência auditável.
+- Reposição pondera o custo apenas pelas unidades positivas existentes. Com saldo anterior zero ou negativo, adota o custo unitário recebido, mesmo se a entrada ainda deixar déficit ou zerar o saldo. O saldo real continua sendo anterior + entrada; nenhum déficit é truncado nem movimento anterior é alterado. Uma próxima entrada sobre saldo positivo volta à média ponderada normal.
 
 ## Offline, dispositivos e autorização
 

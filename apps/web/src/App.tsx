@@ -17,7 +17,9 @@ export function App() {
     <AdminShell
       title="PDV LH Company"
       description="Operação da loja"
-      navigation={<ResponsiveNavigation items={navigation} activeItem="products" onNavigate={() => setNotice(null)} />}
+      navigation={<ResponsiveNavigation items={navigation} activeItem="products" onNavigate={() => {
+        setNotice(null); setCreating(false); setVariantId(null);
+      }} />}
     >
       {notice && <FeedbackMessage variant={notice.variant} className="mb-4">{notice.text}</FeedbackMessage>}
       {variantId ? <VariantInventoryPage key={variantId} variantId={variantId} onBack={() => { setVariantId(null); setNotice(null); }} /> : creating ? <CreateProductPage

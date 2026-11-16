@@ -102,6 +102,34 @@ test("samples_the_server_clock_once_for_lot_and_movement", async () => {
   assert.equal(new Date(result.movements[0]!.occurredAt).toISOString(), instant.toISOString());
 });
 
+for (const [incomingQuantity, expectedQuantity, expectedEstimate] of [[1, -2, -2600], [3, 0, 0], [5, 2, 2600]] as const) {
+  test(`replenishes_audited_deficit_to_${expectedQuantity}_without_clamping_or_duplicate_movements`, async () => {
+    const variantId = await variant();
+    const saleMovementId = randomUUID();
+    const saleId = randomUUID();
+    await database.query(`
+      WITH movement AS (
+        INSERT INTO inventory_movement (id, variant_id, reason, quantity_delta, reference_id, occurred_at)
+        VALUES ($1, $2, 'physical_sale', -3, $3, NOW()) RETURNING quantity_delta
+      )
+      UPDATE inventory_balance SET quantity = quantity + movement.quantity_delta
+      FROM movement WHERE variant_id = $2
+    `, [saleMovementId, variantId, saleId]);
+    const input = { ...command(variantId), quantity: incomingQuantity };
+    const result = await service.replenish(input);
+    assert.equal(result.quantity, expectedQuantity);
+    assert.equal(result.costInCents, 1300);
+    assert.equal(result.estimatedStockCostInCents, expectedEstimate);
+    assert.deepEqual(await service.replenish(input), result);
+    assert.deepEqual(await storedState(variantId), { quantity: expectedQuantity, cost: 1300, lots: 1, movements: 2 });
+    const original = result.movements.find((movement) => movement.id === saleMovementId);
+    assert.equal(original?.quantityDelta, -3);
+    assert.equal(original?.reason, "physical_sale");
+    assert.equal(original?.referenceId, saleId);
+    assert.equal(result.movements.find((movement) => movement.operationId === input.operationId)?.quantityDelta, incomingQuantity);
+  });
+}
+
 test("default_server_clock_records_the_actual_mutation_time", async () => {
   const variantId = await variant();
   const before = Date.now();

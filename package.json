@@ -7,12 +7,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "npm run dev --workspace=@lh-company/web",
-    "dev:api": "npm run dev --workspace=@lh-company/api",
-    "test": "npm run test --workspaces --if-present",
-    "test:db": "npm run test:db --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build:contracts": "npm run build --workspace=@lh-company/contracts",
+    "dev:web": "npm run build:contracts && npm run dev --workspace=@lh-company/web --",
+    "dev:api": "npm run build:contracts && npm run dev --workspace=@lh-company/api",
+    "test": "npm run build:contracts && npm run test --workspaces --if-present",
+    "test:db": "npm run build:contracts && npm run test:db --workspaces --if-present",
+    "test:built": "npm run build && npm run test:built --workspace=@lh-company/api",
+    "build": "npm run build:contracts && npm run build --workspace=@lh-company/api --workspace=@lh-company/web",
+    "typecheck": "npm run build:contracts && npm run typecheck --workspaces --if-present",
     "lint": "eslint ."
   },
   "devDependencies": {

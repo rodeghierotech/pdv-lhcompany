@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx src/test/run-tests.ts unit",
     "test:db": "tsx src/test/run-tests.ts db",
+    "test:built": "node --test scripts/compiled-start.test.mjs",
     "db:migrate": "tsx src/infrastructure/run-migrations.ts"
   },
   "dependencies": {
