@@ -73,3 +73,11 @@ Cada módulo separa interface/rotas, validação, serviço de domínio e reposit
 - Pedido online só movimenta estoque ao pagamento aprovado. Edição posterior calcula delta; reembolso parcial sem redução de item não repõe estoque; devolução repõe somente após recebimento físico confirmado.
 - Em disputa por última unidade, manter os dois movimentos. A venda física concluída tem prioridade comercial, enquanto pedido online já processado vira pendência humana; não existe reversão automática retroativa.
 - Mapeamentos de variante guardam ID externo, SKU e atributos. Religar automaticamente só por SKU único; ambiguidade exige ação humana.
+
+## Componentes e testes do frontend
+
+- Componentes compartilhados seguem receitas shadcn/ui: `class-variance-authority` define variantes tipadas, `clsx` combina condições e `tailwind-merge` resolve conflitos de utilitários em `cn`. Essa composição mantém tokens semânticos e permite extensão sem um segundo sistema visual.
+- Vitest executa os testes web em jsdom; Testing Library (`@testing-library/react`, `@testing-library/user-event` e `@testing-library/jest-dom`) verifica interações e semântica acessível. `src/test/setup.ts` centraliza matchers e limpeza do DOM.
+- A fundação não adiciona biblioteca de estado, formulário ou consulta. Estado visual local usa React; regras de domínio continuam fora dos componentes.
+- `ResponsiveNavigation` recebe itens tipados com `id`, `label`, ícone Lucide e `shortcut` opcional (uma letra ou número). Os atalhos usam Alt + tecla, ignoram modificadores adicionais e ficam suspensos em campos/editáveis. Botões nativos mantêm clique, Tab, Enter e Espaço independentes desses atalhos.
+- `AdminShell` recebe a navegação como composição opcional; não define rotas, permissões ou estado comercial. O shell não presume conexão, sincronização ou confirmação de operações.

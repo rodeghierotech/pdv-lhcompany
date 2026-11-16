@@ -1,11 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: oklch(0.985 0.002 247.839);
-  --color-foreground: oklch(0.208 0.042 265.755);
-  --color-surface: oklch(1 0 0);
-  --color-muted-foreground: oklch(0.446 0.043 257.281);
-  --color-border: oklch(0.928 0.006 264.531);
+  --font-sans: "Segoe UI", Arial, sans-serif;
+  --color-background: oklch(0.975 0.008 85);
+  --color-surface: oklch(0.995 0.003 85);
+  --color-foreground: oklch(0.24 0.012 40);
+  --color-muted-foreground: oklch(0.46 0.016 50);
+  --color-border: oklch(0.64 0.015 65);
+  --color-primary: oklch(0.38 0.095 15);
+  --color-primary-foreground: oklch(0.995 0.003 85);
+  --color-accent: oklch(0.93 0.012 65);
+  --color-accent-foreground: oklch(0.24 0.012 40);
+  --color-destructive: oklch(0.43 0.16 28);
+  --color-destructive-foreground: oklch(0.995 0.003 85);
+  --color-destructive-surface: oklch(0.96 0.018 28);
+  --color-success: oklch(0.37 0.065 155);
+  --color-success-surface: oklch(0.96 0.018 155);
+  --color-focus: oklch(0.38 0.095 15);
+  --radius-control: 0.25rem;
+  --spacing-navigation-wide: 15rem;
+  --spacing-navigation-compact: 12rem;
+  --spacing-navigation-offset: calc(6rem + env(safe-area-inset-bottom, 0px));
+  --spacing-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @layer base {
@@ -14,6 +30,10 @@
   }
 
   body {
-    @apply m-0 min-w-80 bg-background font-sans antialiased;
+    @apply m-0 min-w-80 bg-background font-sans text-foreground antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-focus;
   }
 }
