@@ -23,13 +23,12 @@ interface VariantDraft {
   costInCents: string;
   minimumStockQuantity: string;
   tracksInventory: boolean;
-  active: boolean;
 }
 type Errors = Record<string, string>;
 
 const newVariant = (key: number): VariantDraft => ({
   key, sku: "", barcode: "", attributes: [], salePriceInCents: "", costInCents: "",
-  minimumStockQuantity: "3", tracksInventory: true, active: true,
+  minimumStockQuantity: "3", tracksInventory: true,
 });
 const fieldMessages: Record<string, string> = {
   name: "Informe o nome (até 180 caracteres).",
@@ -47,7 +46,6 @@ export function ProductForm({ onSubmit, onCancel, operationIdFactory = () => cry
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [active, setActive] = useState(true);
   const [variants, setVariants] = useState<VariantDraft[]>(() => [newVariant(0)]);
   const [errors, setErrors] = useState<Errors>({});
   const [failure, setFailure] = useState<{ message: string; reconcile: boolean } | null>(null);
@@ -88,7 +86,7 @@ export function ProductForm({ onSubmit, onCancel, operationIdFactory = () => cry
     };
     const input = {
       operationId,
-      product: { name, description: description.trim() || null, category: category.trim() || null, active,
+      product: { name, description: description.trim() || null, category: category.trim() || null, active: true,
         variants: variants.map((variant, index) => {
           const path = `product.variants.${index}`;
           const minimum = /^\d+$/.test(variant.minimumStockQuantity.trim()) ? Number(variant.minimumStockQuantity) : NaN;
@@ -98,7 +96,7 @@ export function ProductForm({ onSubmit, onCancel, operationIdFactory = () => cry
             attributes: variant.attributes.map(({ name: attributeName, value }) => ({ name: attributeName, value })),
             salePriceInCents: money(variant.salePriceInCents, `${path}.salePriceInCents`, "salePriceInCents"),
             costInCents: money(variant.costInCents, `${path}.costInCents`, "costInCents"),
-            minimumStockQuantity: minimum, tracksInventory: variant.tracksInventory, active: variant.active,
+            minimumStockQuantity: minimum, tracksInventory: variant.tracksInventory, active: true,
           };
         }),
       },
@@ -148,7 +146,6 @@ export function ProductForm({ onSubmit, onCancel, operationIdFactory = () => cry
           <div className="md:col-span-2"><TextField label="Nome do produto" value={name} onChange={(event) => setName(event.target.value)} {...errorProps("product.name")} required maxLength={180} /></div>
           <TextField label="Descrição" value={description} onChange={(event) => setDescription(event.target.value)} {...errorProps("product.description")} maxLength={4000} />
           <TextField label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)} {...errorProps("product.category")} maxLength={120} />
-          <label className={checkboxLabelClass}><input type="checkbox" className={checkboxClass} checked={active} onChange={(event) => setActive(event.target.checked)} />Produto ativo</label>
         </div>
         <div className="space-y-5">
           {variants.map((variant, index) => {
@@ -167,7 +164,6 @@ export function ProductForm({ onSubmit, onCancel, operationIdFactory = () => cry
                 <TextField label="Estoque mínimo" inputMode="numeric" value={variant.minimumStockQuantity} onChange={(event) => updateVariant(variant.key, { minimumStockQuantity: event.target.value })} {...errorProps(`${path}.minimumStockQuantity`)} required hint="Alerta de estoque baixo; não altera o saldo." />
                 <div>
                   <label className={checkboxLabelClass}><input type="checkbox" className={checkboxClass} checked={variant.tracksInventory} onChange={(event) => updateVariant(variant.key, { tracksInventory: event.target.checked })} />Controlar estoque</label>
-                  <label className={checkboxLabelClass}><input type="checkbox" className={checkboxClass} checked={variant.active} onChange={(event) => updateVariant(variant.key, { active: event.target.checked })} />Variante ativa</label>
                 </div>
               </div>
               <div className="space-y-3">

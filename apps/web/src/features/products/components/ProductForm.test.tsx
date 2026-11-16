@@ -50,6 +50,20 @@ describe("product and variants registration", () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalledExactlyOnceWith(command));
   });
 
+  it("creates product and added variants active without offering inactivation controls", async () => {
+    const { onSubmit } = setup();
+    fillValid();
+    fireEvent.click(screen.getByRole("button", { name: "Adicionar variante" }));
+    change("SKU", "CAM-G", variant(2));
+    change("Preço de venda (R$)", "189,90", variant(2));
+    change("Custo (R$)", "80,00", variant(2));
+    expect(screen.queryAllByRole("checkbox", { name: /produto ativo|variante ativa/i })).toHaveLength(0);
+    save();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect(onSubmit.mock.calls[0]?.[0].product.active).toBe(true);
+    expect(onSubmit.mock.calls[0]?.[0].product.variants.map(({ active }) => active)).toEqual([true, true]);
+  });
+
   it("adds/removes variants without losing the other variant's fields", () => {
     setup();
     fillValid();
@@ -149,9 +163,7 @@ describe("product and variants registration", () => {
     fillValid();
     change("Descrição", "Coleção verão");
     change("Categoria", "Camisas");
-    fireEvent.click(screen.getByLabelText("Produto ativo"));
     fireEvent.click(variant().getByLabelText("Controlar estoque"));
-    fireEvent.click(variant().getByLabelText("Variante ativa"));
     change("Código de barras", "789001", variant());
     change("Estoque mínimo", "9", variant());
     fireEvent.click(variant().getByRole("button", { name: "Adicionar Cor/Tamanho" }));
