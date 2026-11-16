@@ -116,6 +116,22 @@ test("invalid_body_path_or_query_returns_400_without_inventory_writes", async ()
   assert.equal(count.rows[0]?.count, 0);
 });
 
+test("malformed_json_returns_safe_invalid_request_for_inventory_and_products_without_writes", async () => {
+  for (const url of ["/inventory/replenishments", "/products"]) {
+    const response = await app.inject({
+      method: "POST", url, headers: { "content-type": "application/json" }, payload: '{"operationId":',
+    });
+    assert.equal(response.statusCode, 400, response.body);
+    assert.deepEqual(response.json(), { code: "INVALID_REQUEST", message: "Dados da requisição inválidos." });
+  }
+  const state = await database.query<{ products: number; movements: number; lots: number }>(`
+    SELECT (SELECT COUNT(*)::INT FROM product) AS products,
+           (SELECT COUNT(*)::INT FROM inventory_movement) AS movements,
+           (SELECT COUNT(*)::INT FROM stock_lot) AS lots
+  `);
+  assert.deepEqual(state.rows[0], { products: 0, movements: 0, lots: 0 });
+});
+
 test("missing_variant_returns_public_404_for_replenishment_and_history", async () => {
   const variantId = randomUUID();
   for (const response of [

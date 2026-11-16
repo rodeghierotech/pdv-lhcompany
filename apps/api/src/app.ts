@@ -11,6 +11,14 @@ import { createProductService, type ProductService } from "./modules/products/pr
 
 export function createApp(options: { database?: Pool } = {}): FastifyInstance {
   const app = Fastify({ logger: true });
+  app.setErrorHandler((error, _request, reply) => {
+    // JSON parsing fails before the routes can validate their shared contracts.
+    if (typeof error === "object" && error !== null && "code" in error
+      && error.code === "FST_ERR_CTP_INVALID_JSON_BODY") {
+      return reply.code(400).send({ code: "INVALID_REQUEST", message: "Dados da requisição inválidos." });
+    }
+    return reply.send(error);
+  });
   let products: ProductService | undefined;
   let inventory: InventoryService | undefined;
   function getProducts(): ProductService {
