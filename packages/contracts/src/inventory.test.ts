@@ -25,6 +25,15 @@ test("accepts_positive_replenishment", () => {
   assert.equal(contracts.CreateReplenishmentCommandSchema.parse(command).sourceReference, undefined);
 });
 
+test("normalizes_and_bounds_inventory_history_limit", () => {
+  assert.deepEqual(contracts.InventoryHistoryQuerySchema.parse({}), { limit: 50 });
+  assert.deepEqual(contracts.InventoryHistoryQuerySchema.parse({ limit: "100" }), { limit: 100 });
+  for (const limit of [0, -1, 1.5, 101, "invalid"]) {
+    assert.equal(contracts.InventoryHistoryQuerySchema.safeParse({ limit }).success, false);
+  }
+  assert.equal(contracts.InventoryHistoryQuerySchema.safeParse({ cursor: "unsupported" }).success, false);
+});
+
 test("rejects_zero_quantity", () => {
   assert.equal(contracts.CreateReplenishmentCommandSchema.safeParse({ ...command, quantity: 0 }).success, false);
 });

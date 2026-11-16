@@ -11,6 +11,12 @@ export const CreateReplenishmentCommandSchema = z.strictObject({
 
 export type CreateReplenishmentCommand = z.infer<typeof CreateReplenishmentCommandSchema>;
 
+export const InventoryHistoryQuerySchema = z.strictObject({
+  limit: z.coerce.number().int().positive().max(100).default(50),
+});
+
+export type InventoryHistoryQuery = z.infer<typeof InventoryHistoryQuerySchema>;
+
 export const InventoryHistoryItemSchema = InventoryMovementSchema.extend({
   lotId: z.string().uuid().nullable(),
   operationId: z.string().uuid().nullable(),
