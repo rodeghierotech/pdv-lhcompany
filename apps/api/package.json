@@ -1,0 +1,36 @@
+{
+  "name": "@pdv/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsup",
+    "start": "node dist/server.js",
+    "worker": "tsx src/worker.ts",
+    "worker:prod": "node dist/worker.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "db:migrate": "tsx src/scripts/migrate.ts",
+    "db:migrate:prod": "node dist/scripts/migrate.js",
+    "create-admin": "tsx src/scripts/create-admin.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.0.0",
+    "@fastify/jwt": "^10.0.0",
+    "@fastify/rate-limit": "^10.0.0",
+    "@pdv/shared": "workspace:*",
+    "fastify": "^5.0.0",
+    "fastify-plugin": "^5.0.0",
+    "pg": "^8.13.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "pino-pretty": "^13.0.0",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0",
+    "vitest": "^3.0.0"
+  }
+}

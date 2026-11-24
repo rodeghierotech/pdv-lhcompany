@@ -1,0 +1,72 @@
+# Blueprint do Render. Segredos (sync: false) são informados no painel — nunca versionados.
+# Nota: o plano gratuito hiberna por inatividade (cold start) e não oferece pre-deploy command;
+# por isso as migrations rodam no início do serviço (protegidas por lock consultivo no banco).
+services:
+  - type: web
+    name: pdv-api
+    runtime: node
+    plan: free
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @pdv/api build
+    startCommand: node apps/api/dist/scripts/migrate.js && node apps/api/dist/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL # Neon (connection string pooled)
+        sync: false
+      - key: DATABASE_URL_MIGRATIONS # Neon (connection string direta, opcional)
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS # URL do pdv-web, ex.: https://pdv-web.onrender.com
+        sync: false
+
+  - type: web
+    name: pdv-web
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @pdv/web build
+    staticPublishPath: apps/web/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: VITE_API_URL # URL do pdv-api
+        sync: false
+      - key: VITE_STORE_NAME
+        value: LH Company
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache
+
+  # Worker da integração Nuvemshop (fase 9): outbox de estoque, eventos, varredura e reconciliação.
+  # Worker dedicado pode exigir plano pago; no plano gratuito, rode `pnpm --filter @pdv/api worker:prod`
+  # em outro processo/host. NÃO é implantado automaticamente: depende de credenciais do app Nuvemshop.
+  - type: worker
+    name: pdv-worker
+    runtime: node
+    plan: starter
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @pdv/api build
+    startCommand: node apps/api/dist/worker.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET # mesmo valor do pdv-api
+        sync: false
+      - key: INTEGRATION_ENCRYPTION_KEY # mesmo valor do pdv-api
+        sync: false
+      - key: NUVEMSHOP_APP_ID
+        sync: false
+      - key: NUVEMSHOP_CLIENT_SECRET
+        sync: false
+      - key: NUVEMSHOP_USER_AGENT
+        sync: false

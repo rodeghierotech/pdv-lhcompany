@@ -1,0 +1,43 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: pdv
+          POSTGRES_PASSWORD: pdv_ci
+          POSTGRES_DB: pdv_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U pdv" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL_TEST: postgres://pdv:pdv_ci@localhost:5432/pdv_test
+      # Banco descartável do CI (nunca apontar para dados reais).
+      DATABASE_URL: postgres://pdv:pdv_ci@localhost:5432/pdv_e2e
+      JWT_SECRET: ci-only-secret-ci-only-secret-ci-only-1234
+      CORS_ORIGINS: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - name: Preparar banco E2E
+        run: |
+          PGPASSWORD=pdv_ci psql -h localhost -U pdv -d pdv_test -c 'create database pdv_e2e'
+          pnpm db:migrate
+          ADMIN_NAME=Admin ADMIN_EMAIL=admin@lh.dev ADMIN_PASSWORD=senha-dev-12345 pnpm --filter @pdv/api create-admin
+      - run: pnpm --filter @pdv/e2e exec playwright install --with-deps chromium
+      - run: pnpm e2e
+        env:
+          E2E_ADMIN_EMAIL: admin@lh.dev
+          E2E_ADMIN_PASSWORD: senha-dev-12345
